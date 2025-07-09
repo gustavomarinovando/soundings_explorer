@@ -2,10 +2,16 @@
 # exit on error
 set -o errexit
 
-# Install backend dependencies
-pip install -r requirements.txt
+# 1. Install Deno into the Render environment
+export DENO_INSTALL="/opt/render/project/.deno"
+curl -fsSL https://deno.land/install.sh | sh
+export PATH="$DENO_INSTALL/bin:$PATH"
 
-# Navigate to the frontend directory and build it
+# 2. Navigate into the frontend directory
 cd scientific-platform-frontend
-npm install
-npm run build
+
+# 3. Install npm dependencies
+deno install
+
+# 4. Build the project using the script from your package.json
+deno task build
