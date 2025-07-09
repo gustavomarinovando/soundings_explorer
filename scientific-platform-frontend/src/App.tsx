@@ -316,7 +316,7 @@ const MonthlyPerformanceChart = ({ data, lang }: { data: MonthlyPerformanceData[
 // --- Main App Component ---
 export default function App() {
   const [language] = useState<Language>(navigator.language.startsWith('es') ? 'es' : 'en');
-  const [allLaunches, setAllLaunches] = useState<Launch[]>([]);
+  const [, setAllLaunches] = useState<Launch[]>([]);
   const [launchesByDay, setLaunchesByDay] = useState<{ [key: string]: Launch[] }>({});
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
