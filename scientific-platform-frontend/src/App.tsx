@@ -10,11 +10,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+ChartJS.register(LinearScale, PointElement, ChartJsLine, Title, Tooltip, Legend, BarElement, CategoryScale);
 import { Chart } from 'react-chartjs-2';
 import './App.css';
 
-// Register the components we need for Chart.js
-ChartJS.register(LinearScale, PointElement, ChartJsLine, Title, Tooltip, Legend, BarElement, CategoryScale);
 
 // --- TypeScript Type Definitions ---
 type Launch = { id: number; launch_date: string; filename: string; };
