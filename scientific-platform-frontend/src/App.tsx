@@ -22,6 +22,8 @@ type Measurement = { id: number; launch_id: number; time: number | null; Height:
 type Language = 'en' | 'es';
 type MonthlyPerformanceData = { day: number; max_altitude: number; ascent_time: number; };
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
 // --- Translation & Helper Functions ---
 const translations = {
   en: { 
@@ -331,7 +333,7 @@ export default function App() {
   useEffect(() => {
     const fetchAndProcessLaunches = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/launches');
+        const res = await fetch(`${API_BASE_URL}/launches`);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
         const data: Launch[] = await res.json();
         setAllLaunches(data);
@@ -350,7 +352,7 @@ export default function App() {
     const fetchMeasurements = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/launches/${selectedLaunch.id}`);
+        const res = await fetch(`${API_BASE_URL}/launches/${selectedLaunch.id}`);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
         const data: Measurement[] = await res.json();
         setMeasurements(data);
@@ -368,7 +370,7 @@ export default function App() {
     const fetchMonthlyData = async () => {
       setIsLoading(true); // Set loading true when fetching monthly data
       try {
-        const perfRes = await fetch(`http://127.0.0.1:8000/performance/monthly/${year}/${month}`);
+        const perfRes = await fetch(`${API_BASE_URL}/performance/monthly/${year}/${month}`);
         if (!perfRes.ok) throw new Error("Failed to fetch monthly data");
         const perfData = await perfRes.json();
         setMonthlyPerformance(perfData);
