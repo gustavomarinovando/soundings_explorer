@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: soundings-explorer
+    env: static
+    buildCommand: ./build.sh
+    staticPublishPath: dist
