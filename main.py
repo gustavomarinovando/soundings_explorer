@@ -83,8 +83,16 @@ def get_measurements_for_launch(launch_id: int, db: Session = Depends(get_db)):
     launch = db.query(Launch).filter(Launch.id == launch_id).first()
     if not launch: raise HTTPException(status_code=404, detail=f"Launch with ID {launch_id} not found.")
     measurements = db.query(Measurement).filter(Measurement.launch_id == launch_id).order_by(Measurement.time).all()
+
     def sanitize_float(val):
-        return val if val is None or (not math.isnan(val) and math.isfinite(val)) else None
+        try:
+            if val is None:
+                return None
+            if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                return None
+            return val
+        except:
+            return None
 
     def clean_measurement(m):
         return MeasurementSchema(
