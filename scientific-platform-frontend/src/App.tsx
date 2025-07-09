@@ -6,11 +6,12 @@ import {
   LineElement as ChartJsLine,
   BarElement,
   CategoryScale,
+  BarController,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-ChartJS.register(LinearScale, PointElement, ChartJsLine, Title, Tooltip, Legend, BarElement, CategoryScale);
+ChartJS.register(LinearScale, PointElement, ChartJsLine, Title, Tooltip, Legend, BarElement, CategoryScale, BarController);
 import { Chart } from 'react-chartjs-2';
 import './App.css';
 
