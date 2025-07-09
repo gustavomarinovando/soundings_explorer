@@ -7,8 +7,6 @@ export DENO_INSTALL="/opt/render/project/.deno"
 curl -fsSL https://deno.land/install.sh | sh
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-echo "API base: $VITE_API_BASE_URL"
-
 # 3. Install npm dependencies
 deno install
 
