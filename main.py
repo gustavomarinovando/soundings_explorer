@@ -14,7 +14,7 @@ from decouple import config
 # --- 1. Database and Model Setup (No changes here) ---
 
 DATABASE_URL = config("DATABASE_URL", default="sqlite:///./database.db")
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -50,7 +50,7 @@ class MonthlyPerformanceData(BaseModel):
 
 # --- 3. FastAPI Application Setup ---
 app = FastAPI(title="Atmospheric Sounding API", description="API for accessing radiosonde launch data from La Paz, Bolivia.", version="1.0.0")
-origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 def get_db():
