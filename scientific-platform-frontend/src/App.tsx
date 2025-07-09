@@ -541,12 +541,12 @@ const SoundingStatisticsTable = ({ measurements, lang }: { measurements: Measure
       return { min, max, stdDev };
     };
 
-    const temps = measurements.filter(m => m.T != null).map(m => kelvinToCelsius(m.T!));
+    const temps = measurements.filter(m => m.T != null).map(m => kelvinToCelsius(m.T!)).filter((v): v is number => v !== null);
     const pressures = measurements.filter(m => m.P != null).map(m => m.P!);
     const rhs = measurements.filter(m => m.RH != null).map(m => m.RH!);
     const ffs = measurements.filter(m => m.FF != null).map(m => m.FF!);
     const mrs = measurements.filter(m => m.MR != null).map(m => m.MR!);
-    const tds = measurements.filter(m => m.TD != null).map(m => kelvinToCelsius(m.TD!));
+    const tds = measurements.filter(m => m.TD != null).map(m => kelvinToCelsius(m.TD!)).filter((v): v is number => v !== null);
 
     return {
       temp: calculateStats(temps),
