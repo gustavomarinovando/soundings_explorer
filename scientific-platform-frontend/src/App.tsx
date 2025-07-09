@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   LinearScale,
@@ -175,8 +175,7 @@ const ProfileChart = ({ measurements, lang }: { measurements: Measurement[], lan
       }, 
       y_rh: { 
         type: 'linear' as const, 
-        position: 'right' as const, 
-        display: 'auto', 
+        position: 'right' as const,
         title: { display: true, text: t('rhAxis'), color: '#1E215B', font: {size: 14} }, 
         ticks: { color: '#1E215B' }, 
         grid: { drawOnChartArea: false } 
