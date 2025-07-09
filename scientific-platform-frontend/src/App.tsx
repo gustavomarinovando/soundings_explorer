@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Chart as ChartJS,
   LinearScale,
@@ -191,18 +191,52 @@ const ProfileChart = ({ measurements, lang }: { measurements: Measurement[], lan
 const LaunchSummary = ({ measurements, selectedLaunch, lang }: { measurements: Measurement[], selectedLaunch: Launch | null, lang: Language }) => {
   const t = (key: keyof typeof translations.en) => translations[lang][key];
 
-  if (measurements.length < 2 || !selectedLaunch) return null;
+  const summary = useMemo(() => {
+    if (measurements.length < 2 || !selectedLaunch) return null;
 
-  const surface = measurements[1];
-  const maxAlt = measurements.reduce((max, c) => (c.Height && (!max.Height || c.Height > max.Height)) ? c : max, measurements[0]);
-  const minTempRecord = measurements.filter(m => m.T).reduce((min, c) => (c.T && (!min.T || c.T < min.T)) ? c : min, measurements[0]);
-  const validWindMeasurements = measurements.filter(m => m.u != null && m.v != null);
-  const maxWindRecord = validWindMeasurements.length > 0 ? validWindMeasurements.reduce((max, c) => (Math.sqrt((c.u ?? 0) ** 2 + (c.v ?? 0) ** 2) > Math.sqrt((max.u ?? 0) ** 2 + (max.v ?? 0) ** 2) ? c : max)) : { u: 0, v: 0 };
-  const maxTime = measurements.reduce((max, c) => (c.time && (!max || c.time > max)) ? c.time : max, 0);
+    const surface = measurements[1];
 
-  const ascentTime = maxTime ? (maxTime / 60).toFixed(1) : 'N/A';
-  const ascentSpeed = (maxTime && maxAlt.Height) ? (maxAlt.Height / maxTime).toFixed(2) : 'N/A';
-  const maxWindSpeed = Math.sqrt((maxWindRecord.u ?? 0)**2 + (maxWindRecord.v ?? 0)**2).toFixed(2);
+    const validHeightMeasurements = measurements.filter(m => m.Height != null);
+    const maxAlt = validHeightMeasurements.length > 0
+      ? validHeightMeasurements.reduce((max, c) => c.Height! > max.Height! ? c : max)
+      : { Height: null, P: null };
+
+    const validTempMeasurements = measurements.filter(m => m.T != null);
+    const minTempRecord = validTempMeasurements.length > 0
+      ? validTempMeasurements.reduce((min, c) => c.T! < min.T! ? c : min)
+      : { T: null, Height: null };
+
+    const validWindMeasurements = measurements.filter(m => m.u != null && m.v != null);
+    const maxWindRecord = validWindMeasurements.length > 0
+      ? validWindMeasurements.reduce((max, c) => {
+          const cSpeed = Math.sqrt(c.u!**2 + c.v!**2);
+          const maxSpeed = Math.sqrt(max.u!**2 + max.v!**2);
+          return cSpeed > maxSpeed ? c : max;
+        })
+      : null;
+    const maxWindSpeed = maxWindRecord ? Math.sqrt(maxWindRecord.u!**2 + maxWindRecord.v!**2).toFixed(2) : 'N/A';
+
+    const validTimeMeasurements = measurements.filter(m => m.time != null);
+    const maxTime = validTimeMeasurements.length > 0
+      ? validTimeMeasurements.reduce((max, c) => c.time! > max.time! ? c : max).time
+      : null;
+
+    const ascentTime = maxTime ? (maxTime / 60).toFixed(1) : 'N/A';
+    const ascentSpeed = (maxTime && maxAlt.Height) ? (maxAlt.Height / maxTime).toFixed(2) : 'N/A';
+
+    return {
+      surface,
+      maxAlt,
+      minTempRecord,
+      maxWindSpeed,
+      ascentTime,
+      ascentSpeed,
+    };
+  }, [measurements, selectedLaunch]);
+
+  if (!summary || !selectedLaunch) return null;
+
+  const { surface, maxAlt, minTempRecord, maxWindSpeed, ascentTime, ascentSpeed } = summary;
 
   return (
     <div className="bg-gray-50 text-gray-800 p-4 rounded-lg border border-gray-200">
@@ -317,7 +351,6 @@ const MonthlyPerformanceChart = ({ data, lang }: { data: MonthlyPerformanceData[
 // --- Main App Component ---
 export default function App() {
   const [language] = useState<Language>(navigator.language.startsWith('es') ? 'es' : 'en');
-  const [, setAllLaunches] = useState<Launch[]>([]);
   const [launchesByDay, setLaunchesByDay] = useState<{ [key: string]: Launch[] }>({});
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -327,6 +360,7 @@ export default function App() {
   const [downsampled, setDownsampled] = useState<Measurement[]>([]);
   const [monthlyPerformance, setMonthlyPerformance] = useState<MonthlyPerformanceData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const t = (key: keyof typeof translations.en) => translations[language][key];
 
@@ -336,13 +370,22 @@ export default function App() {
         const res = await fetch(`${API_BASE_URL}/launches`);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
         const data: Launch[] = await res.json();
-        setAllLaunches(data);
+        // setAllLaunches(data);
         const grouped = data.reduce((acc, l) => { const key = new Date(l.launch_date).toISOString().split('T')[0]; if (!acc[key]) acc[key] = []; acc[key].push(l); return acc; }, {} as { [key: string]: Launch[] });
         setLaunchesByDay(grouped);
         const years = [...new Set(data.map(l => new Date(l.launch_date).getFullYear().toString()))];
         setAvailableYears(years.sort().reverse());
-        if (data.length > 0) { const latest = new Date(data[0].launch_date); setSelectedDate(latest); setSelectedLaunch(data[0]); }
-      } catch (e) { if (e instanceof Error) setError(`Failed to connect to API. Is it running?`); }
+
+        if (data.length > 0) {
+          const latestLaunch = data.reduce((latest, current) => 
+            new Date(current.launch_date) > new Date(latest.launch_date) ? current : latest
+          );
+          setSelectedDate(new Date(latestLaunch.launch_date));
+          setSelectedLaunch(latestLaunch);
+        }
+      } catch (e) { 
+        if (e instanceof Error) setError(`Failed to connect to API. Is it running? Details: ${e.message}`); 
+      }
     };
     fetchAndProcessLaunches();
   }, []);
@@ -350,7 +393,8 @@ export default function App() {
   useEffect(() => {
     if (!selectedLaunch) return;
     const fetchMeasurements = async () => {
-      setIsLoading(true);
+      setIsProfileLoading(true);
+      setError(null);
       try {
         const res = await fetch(`${API_BASE_URL}/launches/${selectedLaunch.id}`);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
@@ -358,40 +402,40 @@ export default function App() {
         setMeasurements(data);
         const factor = Math.max(1, Math.floor(data.length / 500));
         setDownsampled(data.filter((_, i) => i % factor === 0));
-      } catch (e) { if (e instanceof Error) setError(`Failed to fetch measurements for launch ${selectedLaunch.id}.`); } 
-      finally { setIsLoading(false); }
+      } catch (e) { if (e instanceof Error) setError(`Failed to fetch measurements for launch ${selectedLaunch.id}.`); 
+        setMeasurements([]); // Clear old data on error
+        setDownsampled([]);
+      } 
+      finally { setIsProfileLoading(false); }
     };
     fetchMeasurements();
   }, [selectedLaunch]);
 
+  // Memoize year and month from selectedDate
+  const { year, month } = useMemo(() => ({
+      year: selectedDate.getFullYear(),
+      month: selectedDate.getMonth(), // 0-indexed
+  }), [selectedDate]);
+
   useEffect(() => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth() + 1;
+    // const year = selectedDate.getFullYear();
+    // const month = selectedDate.getMonth() + 1;
     const fetchMonthlyData = async () => {
       setIsLoading(true); // Set loading true when fetching monthly data
       try {
-        const perfRes = await fetch(`${API_BASE_URL}/performance/monthly/${year}/${month}`);
+        const perfRes = await fetch(`${API_BASE_URL}/performance/monthly/${year}/${month + 1}`);
         if (!perfRes.ok) throw new Error("Failed to fetch monthly data");
         const perfData = await perfRes.json();
         setMonthlyPerformance(perfData);
-      } catch (e) { console.error(e); setError("Failed to load monthly performance data."); }
+      } catch (e) { 
+        console.error(e); 
+        setError("Failed to load monthly performance data."); 
+        setMonthlyPerformance([]);
+      }
       finally { setIsLoading(false); } // Set loading false after fetch
     };
-    // Only fetch monthly data if the month or year changes, not just the day
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    if (selectedDate.getMonth() !== currentMonth || selectedDate.getFullYear() !== currentYear) {
-      fetchMonthlyData();
-    } else if (monthlyPerformance.length === 0) { // Fetch initially if no data
-      fetchMonthlyData();
-    }
-  }, [selectedDate.getMonth(), selectedDate.getFullYear()]); // Dependency array changed
-
-  const { year, month } = { year: selectedDate.getFullYear(), month: selectedDate.getMonth() };
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfMonth = new Date(year, month, 1).getDay();
-  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const paddingDays = Array.from({ length: firstDayOfMonth });
+    fetchMonthlyData();
+  }, [year, month]); // Dependency on selectedDate
 
   const handleDayClick = (day: number) => {
     const dayKey = new Date(year, month, day).toISOString().split('T')[0];
@@ -401,6 +445,12 @@ export default function App() {
     if (dayLaunches.length === 1) { setSelectedLaunch(dayLaunches[0]); } 
     else { dayLaunches.sort((a, b) => new Date(a.launch_date).getTime() - new Date(b.launch_date).getTime()); setLaunchesForModal(dayLaunches); }
   };
+
+    // Calendar generation logic
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const paddingDays = Array.from({ length: firstDayOfMonth });
 
   return (
     <div className="bg-gray-100 text-gray-800 min-h-screen font-sans p-4 sm:p-6 lg:p-8">
@@ -466,8 +516,8 @@ export default function App() {
               <>
                 <LaunchSummary measurements={measurements} selectedLaunch={selectedLaunch} lang={language}/>
                 <div className="flex-grow relative min-h-[400px]">
-                  {measurements.length > 0 ? <ProfileChart measurements={downsampled} lang={language}/>
-                  : isLoading ? <div className="flex items-center justify-center h-full"><p>{t('loading')}</p></div>
+                  {isProfileLoading ? <div className="flex items-center justify-center h-full"><p>{t('loading')}</p></div>
+                  : measurements.length > 0 ? <ProfileChart measurements={downsampled} lang={language}/>
                   : <div className="flex items-center justify-center h-full"><p>{t('noData')}</p></div>}
                 </div>
               </>
