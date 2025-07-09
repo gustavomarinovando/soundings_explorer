@@ -23,6 +23,7 @@ type Language = 'en' | 'es';
 type MonthlyPerformanceData = { day: number; max_altitude: number; ascent_time: number; };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+console.log("API Base URL:", import.meta.env.VITE_API_BASE_URL);
 
 // --- Translation & Helper Functions ---
 const translations = {
