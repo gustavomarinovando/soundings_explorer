@@ -83,7 +83,36 @@ def get_measurements_for_launch(launch_id: int, db: Session = Depends(get_db)):
     launch = db.query(Launch).filter(Launch.id == launch_id).first()
     if not launch: raise HTTPException(status_code=404, detail=f"Launch with ID {launch_id} not found.")
     measurements = db.query(Measurement).filter(Measurement.launch_id == launch_id).order_by(Measurement.time).all()
-    return measurements
+    def sanitize_float(val):
+        return val if val is None or (not math.isnan(val) and math.isfinite(val)) else None
+
+    def clean_measurement(m):
+        return MeasurementSchema(
+            id=m.id,
+            launch_id=m.launch_id,
+            time=sanitize_float(m.time),
+            Height=sanitize_float(m.Height),
+            T=sanitize_float(m.T),
+            RH=sanitize_float(m.RH),
+            P=sanitize_float(m.P),
+            Lon=sanitize_float(m.Lon),
+            Lat=sanitize_float(m.Lat),
+            u=sanitize_float(m.u),
+            v=sanitize_float(m.v),
+            Pscl=sanitize_float(m.Pscl),
+            TD=sanitize_float(m.TD),
+            MR=sanitize_float(m.MR),
+            DD=sanitize_float(m.DD),
+            FF=sanitize_float(m.FF),
+            AZ=sanitize_float(m.AZ),
+            Range=sanitize_float(m.Range),
+            SpuKey=m.SpuKey,
+            UsrKey=m.UsrKey,
+            RadarH=sanitize_float(m.RadarH)
+        )
+
+    sanitized_measurements = [clean_measurement(m) for m in measurements]
+    return sanitized_measurements
 
 @app.get("/performance/monthly/{year}/{month}", response_model=List[MonthlyPerformanceData])
 def get_monthly_performance(year: int, month: int, db: Session = Depends(get_db)):
