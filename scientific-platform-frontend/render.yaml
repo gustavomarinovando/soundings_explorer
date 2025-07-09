@@ -4,3 +4,6 @@ services:
     env: static
     buildCommand: ./build.sh
     staticPublishPath: dist
+    envVars: # Environment variables
+      - key: VITE_API_BASE_URL
+        value: https://sounding-api.onrender.com
