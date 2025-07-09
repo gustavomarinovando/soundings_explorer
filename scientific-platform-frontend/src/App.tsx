@@ -201,6 +201,7 @@ const TemperatureChart = ({ measurements, lang }: { measurements: Measurement[],
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -258,6 +259,7 @@ const PressureChart = ({ measurements, lang }: { measurements: Measurement[], la
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -317,6 +319,7 @@ const HumidityChart = ({ measurements, lang }: { measurements: Measurement[], la
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -374,6 +377,7 @@ const DewPointTemperatureChart = ({ measurements, lang }: { measurements: Measur
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -438,7 +442,7 @@ const WindComponentsChart = ({ measurements, lang }: { measurements: Measurement
             const m = measurements[item.dataIndex];
             let label = `${item.dataset.label}: ${item.parsed.x.toFixed(2)} m/s`;
             // Add Wind Direction (DD) to tooltip
-            if (m.DD != null) {
+            if (item.dataset.label === t('windSpeedAxis') && m.DD != null) {
               label += ` | ${t('windDirection')}: ${m.DD.toFixed(1)}°`;
             }
             return label;
@@ -458,6 +462,7 @@ const WindComponentsChart = ({ measurements, lang }: { measurements: Measurement
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -515,6 +520,7 @@ const MixingRatioChart = ({ measurements, lang }: { measurements: Measurement[],
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
+        min: 4,
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
