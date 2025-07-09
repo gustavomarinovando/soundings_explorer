@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # exit on error
-set -o errexit
+set -e
+
+echo "Running custom build script"
 
 # 1. Install Deno into the Render environment
 export DENO_INSTALL="/opt/render/project/.deno"
