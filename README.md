@@ -37,7 +37,7 @@ The **Atmospheric Sounding Explorer** is built to efficiently browse, visualize,
 
 ## Tech Stack
 
-* **Backend:** ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python\&logoColor=white), ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi\&logoColor=white)
+* **Backend:** ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python\&logoColor=white), ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi\&logoColor=white)
 * **Frontend:** ![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react\&logoColor=black), ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript\&logoColor=white), ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite\&logoColor=white), ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css\&logoColor=white), ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?logo=chart.js\&logoColor=white)
 * **Database:** ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql\&logoColor=white) (production), ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite\&logoColor=white) (local development)
 * **Deployment:** ![Render](https://img.shields.io/badge/Render-46E3B7?logo=render\&logoColor=white)
@@ -64,7 +64,7 @@ Follow these steps to set up the project locally for development and testing.
 
 Ensure the following are installed:
 
-* **Python 3.9+**
+* **Python 3.11+**
 * **Node.js and npm**
 * **Deno**
 
