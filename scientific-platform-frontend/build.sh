@@ -7,9 +7,6 @@ export DENO_INSTALL="/opt/render/project/.deno"
 curl -fsSL https://deno.land/install.sh | sh
 export PATH="$DENO_INSTALL/bin:$PATH"
 
-# 2. Navigate into the frontend directory
-cd scientific-platform-frontend
-
 # 3. Install npm dependencies
 deno install
 
