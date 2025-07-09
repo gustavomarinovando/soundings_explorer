@@ -513,18 +513,28 @@ export default function App() {
             </div>
           </div>
           
-          <div className={`lg:col-span-2 bg-white border rounded-lg shadow-lg p-6 flex flex-col gap-6 transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+          <div className={`lg:col-span-2 bg-white border rounded-lg shadow-lg p-6 flex flex-col gap-6 transition-opacity duration-300 ${isProfileLoading ? 'opacity-50' : 'opacity-100'}`}>
             {selectedLaunch ? (
               <>
                 <LaunchSummary measurements={measurements} selectedLaunch={selectedLaunch} lang={language}/>
                 <div className="flex-grow relative min-h-[400px]">
-                  {isProfileLoading ? <div className="flex items-center justify-center h-full"><p>{t('loading')}</p></div>
-                  : measurements.length > 0 ? <ProfileChart measurements={downsampled} lang={language}/>
-                  : <div className="flex items-center justify-center h-full"><p>{t('noData')}</p></div>}
+                  {isProfileLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <p>{t('loading')}</p>
+                    </div>
+                  ) : measurements.length > 0 ? (
+                    <ProfileChart measurements={downsampled} lang={language}/>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p>{t('noData')}</p>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full min-h-[400px]"><p className="text-xl text-gray-400">{t('selectDay')}</p></div>
+              <div className="flex items-center justify-center h-full min-h-[400px]">
+                <p className="text-xl text-gray-400">{t('selectDay')}</p>
+              </div>
             )}
           </div>
         </main>
