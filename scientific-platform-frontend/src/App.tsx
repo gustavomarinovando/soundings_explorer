@@ -73,15 +73,27 @@ const translations = {
     expandSummary: "Expand Summary", 
     collapseSummary: "Collapse Summary", 
     soundingStatistics: "Sounding Statistics", 
-    min: "Min", // New
-    max: "Max", // New
-    stdDev: "Std. Dev.", // New
-    temp: "Temperature", // New
-    pressure: "Pressure", // New
-    rh: "Relative Humidity", // New
-    dewPoint: "Dew Point", // New
-    wind: "Wind Speed", // New
-    mixingRatio: "Mixing Ratio", // New
+    min: "Min", 
+    max: "Max", 
+    stdDev: "Std. Dev.", 
+    temp: "Temperature", 
+    pressure: "Pressure", 
+    rh: "Relative Humidity", 
+    dewPoint: "Dew Point", 
+    wind: "Wind Speed", 
+    mixingRatio: "Mixing Ratio", 
+    east: "East", 
+    west: "West", 
+    north: "North", 
+    south: "South",
+    n: "N", // New for cardinal directions
+    ne: "NE",
+    e: "E",
+    se: "SE",
+    s: "S",
+    sw: "SW",
+    w: "W",
+    nw: "NW",
   },
   es: { 
     platformTitle: "Explorador de Sondeos Atmosféricos", 
@@ -137,6 +149,18 @@ const translations = {
     dewPoint: "Punto de Rocío", 
     wind: "Velocidad del Viento", 
     mixingRatio: "Razón de Mezcla", 
+    east: "Este", 
+    west: "Oeste", 
+    north: "Norte", 
+    south: "Sur",
+    n: "N", // New for cardinal directions
+    ne: "NE",
+    e: "E",
+    se: "SE",
+    s: "S",
+    sw: "SO", // Corrected Spanish for SW
+    w: "O", // Corrected Spanish for W
+    nw: "NO", // Corrected Spanish for NW
   }
 };
 
@@ -149,6 +173,26 @@ const formatLaunchDate = (dateString: string, lang: Language): string => {
   const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, }; 
   return new Intl.DateTimeFormat(lang, options).format(date).replace(/,/g, ''); 
 }
+
+// Helper to get cardinal/intercardinal direction from degrees
+const getCardinalDirection = (degrees: number | null, lang: Language): string => {
+  if (degrees === null) return '';
+  const t = (key: keyof typeof translations.en) => translations[lang][key];
+  
+  // Adjust degrees to be within 0-360
+  degrees = (degrees + 360) % 360;
+
+  if (degrees >= 337.5 || degrees < 22.5) return t('n');
+  if (degrees >= 22.5 && degrees < 67.5) return t('ne');
+  if (degrees >= 67.5 && degrees < 112.5) return t('e');
+  if (degrees >= 112.5 && degrees < 157.5) return t('se');
+  if (degrees >= 157.5 && degrees < 202.5) return t('s');
+  if (degrees >= 202.5 && degrees < 247.5) return t('sw');
+  if (degrees >= 247.5 && degrees < 292.5) return t('w');
+  if (degrees >= 292.5 && degrees < 337.5) return t('nw');
+  
+  return ''; // Should not happen
+};
 
 
 // --- React Components for individual charts ---
@@ -201,7 +245,7 @@ const TemperatureChart = ({ measurements, lang }: { measurements: Measurement[],
         type: 'linear' as const,
         position: 'left' as const,
         title: { display: true, text: t('altitudeAxis'), color: '#1E215B', font: {size: 14} },
-        min: 4,
+        min: 4, // Set Y-axis minimum to 4km
         ticks: { color: '#1E215B' },
         grid: { color: 'rgba(0, 0, 0, 0.1)' }
       }
@@ -441,9 +485,16 @@ const WindComponentsChart = ({ measurements, lang }: { measurements: Measurement
           label: (item: any) => {
             const m = measurements[item.dataIndex];
             let label = `${item.dataset.label}: ${item.parsed.x.toFixed(2)} m/s`;
-            // Add Wind Direction (DD) to tooltip
+            
+            // Fixed direction for Zonal and Meridional components based on definition
+            if (item.dataset.label === t('zonalWindAxis')) {
+              label += ` (from ${item.parsed.x >= 0 ? t('west') : t('east')})`; // Positive u is from West, Negative u is from East
+            } else if (item.dataset.label === t('meridionalWindAxis')) {
+              label += ` (from ${item.parsed.x >= 0 ? t('south') : t('north')})`; // Positive v is from South, Negative v is from North
+            }
+            // Add Wind Direction (DD) and cardinal/intercardinal for 'Horizontal' (Wind Speed) dataset
             if (item.dataset.label === t('windSpeedAxis') && m.DD != null) {
-              label += ` | ${t('windDirection')}: ${m.DD.toFixed(1)}°`;
+              label += ` | ${t('windDirection')}: ${m.DD.toFixed(0)}° (${getCardinalDirection(m.DD, lang)})`;
             }
             return label;
           }
@@ -567,56 +618,58 @@ const SoundingStatisticsTable = ({ measurements, lang }: { measurements: Measure
   if (!stats) return null;
 
   return (
-    <div className="bg-white border rounded-lg shadow-lg p-4"> {/* Added bg-white, border, rounded-lg, shadow-lg */}
+    <div className="bg-white border rounded-lg shadow-lg p-4">
       <h3 className="text-xl font-bold mb-4 text-[#1E215B]">{t('soundingStatistics')}</h3>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('min')}</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('max')}</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('stdDev')}</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('temp')} (°C)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.min?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.max?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.stdDev?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('pressure')} (hPa)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.min?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.max?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.stdDev?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('rh')} (%)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.min?.toFixed(1) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.max?.toFixed(1) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.stdDev?.toFixed(1) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('dewPoint')} (°C)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.min?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.max?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.stdDev?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('wind')} (m/s)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.min?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.max?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.stdDev?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-          <tr>
-            <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('mixingRatio')} (g/kg)</td>
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.min?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.max?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-            <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.stdDev?.toFixed(2) ?? 'N/A'}</td> {/* Reduced font size */}
-          </tr>
-        </tbody>
-      </table>
+      <div className="overflow-x-auto"> {/* Added overflow-x-auto for horizontal scrolling */}
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('min')}</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('max')}</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('stdDev')}</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('temp')} (°C)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.min?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.max?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.temp.stdDev?.toFixed(2) ?? 'N/A'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('pressure')} (hPa)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.min?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.max?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.pressure.stdDev?.toFixed(2) ?? 'N/A'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('rh')} (%)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.min?.toFixed(1) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.max?.toFixed(1) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.rh.stdDev?.toFixed(1) ?? 'N/A'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('dewPoint')} (°C)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.min?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.max?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.dewPoint.stdDev?.toFixed(2) ?? 'N/A'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('wind')} (m/s)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.min?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.max?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.wind.stdDev?.toFixed(2) ?? 'N/A'}</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-900">{t('mixingRatio')} (g/kg)</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.min?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.max?.toFixed(2) ?? 'N/A'}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-700">{stats.mixingRatio.stdDev?.toFixed(2) ?? 'N/A'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
@@ -624,7 +677,7 @@ const SoundingStatisticsTable = ({ measurements, lang }: { measurements: Measure
 
 const LaunchSummary = ({ measurements, selectedLaunch, lang }: { measurements: Measurement[], selectedLaunch: Launch | null, lang: Language }) => {
   const t = (key: keyof typeof translations.en) => translations[lang][key];
-  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed by default
+  const [isCollapsed, setIsCollapsed] = useState(false); // Reverted to start expanded
 
   const summary = useMemo(() => {
     if (measurements.length < 2 || !selectedLaunch) return null;
@@ -713,7 +766,7 @@ const LaunchSummary = ({ measurements, selectedLaunch, lang }: { measurements: M
         </button>
       </div>
       
-      {!isCollapsed && (
+      {!isCollapsed && ( // Only show content when not collapsed
         <>
           <div className="mb-4 bg-white p-3 rounded-md">
             <p className="text-sm text-gray-500">{t('selectedLaunch')}</p>
@@ -961,18 +1014,26 @@ export default function App() {
     <div className="bg-gray-100 text-gray-800 min-h-screen font-sans p-4 sm:p-6 lg:p-8">
       {launchesForModal.length > 0 && <LaunchSelectorModal launches={launchesForModal} onSelect={(l) => {setSelectedLaunch(l); setLaunchesForModal([]);}} onClose={() => setLaunchesForModal([])} lang={language} />}
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 border-b-2 border-[#FDB813] pb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-[#1E215B]">{t('platformTitle')}</h1>
-            <p className="text-lg text-[#6D6E71] mt-2">{t('platformSubtitle')}</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* SENAMHI Logo */}
-            <img src="/senamhi.png" alt="SENAMHI Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=SENAMHI' }} />
-            {/* UPB Logo */}
-            <img src="/upb.png" alt="UPB Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=UPB' }} />
-            {/* LRC Logo */}
-            <img src="/lrc.png" alt="LRC Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=LRC' }} />
+        <header className="mb-8 border-b-2 border-[#FDB813] pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-[#1E215B]">{t('platformTitle')}</h1>
+              <p className="text-lg text-[#6D6E71] mt-2">{t('platformSubtitle')}</p>
+            </div>
+            <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+              {/* SENAMHI Logo */}
+              <a href="https://www.senamhi.gob.bo/" target="_blank" rel="noopener noreferrer">
+                <img src="/senamhi.png" alt="SENAMHI Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=SENAMHI' }} />
+              </a>
+              {/* UPB Logo */}
+              <a href="https://www.upb.edu/" target="_blank" rel="noopener noreferrer">
+                <img src="/upb.png" alt="UPB Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=UPB' }} />
+              </a>
+              {/* LRC Logo */}
+              <a href="http://lrc.upb.edu/" target="_blank" rel="noopener noreferrer">
+                <img src="/lrc.png" alt="LRC Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=LRC' }} />
+              </a>
+            </div>
           </div>
         </header>
 
@@ -1010,7 +1071,7 @@ export default function App() {
               </div>
             </div>
             {/* Monthly Summary Chart on the left side */}
-            <div className="bg-white border rounded-lg shadow-lg p-4 flex flex-col h-96"> {/* Reduced height from h-96 to h-80 */}
+            <div className="bg-white border rounded-lg shadow-lg p-4 flex flex-col h-96">
               <div className="flex-grow relative">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
