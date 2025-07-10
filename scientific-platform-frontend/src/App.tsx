@@ -86,7 +86,7 @@ const translations = {
     west: "West", 
     north: "North", 
     south: "South",
-    n: "N", // New for cardinal directions
+    n: "N",
     ne: "NE",
     e: "E",
     se: "SE",
@@ -94,6 +94,7 @@ const translations = {
     sw: "SW",
     w: "W",
     nw: "NW",
+    prepositionText: "towards",
   },
   es: { 
     platformTitle: "Explorador de Sondeos Atmosféricos", 
@@ -153,14 +154,15 @@ const translations = {
     west: "Oeste", 
     north: "Norte", 
     south: "Sur",
-    n: "N", // New for cardinal directions
+    n: "N",
     ne: "NE",
     e: "E",
     se: "SE",
     s: "S",
-    sw: "SO", // Corrected Spanish for SW
-    w: "O", // Corrected Spanish for W
-    nw: "NO", // Corrected Spanish for NW
+    sw: "SO",
+    w: "O",
+    nw: "NO",
+    prepositionText: "hacia",
   }
 };
 
@@ -488,9 +490,9 @@ const WindComponentsChart = ({ measurements, lang }: { measurements: Measurement
             
             // Fixed direction for Zonal and Meridional components based on definition
             if (item.dataset.label === t('zonalWindAxis')) {
-              label += ` (from ${item.parsed.x >= 0 ? t('west') : t('east')})`; // Positive u is from West, Negative u is from East
+              label += ` (${t('prepositionText')} ${item.parsed.x >= 0 ? t('west') : t('east')})`; // Positive u is from West, Negative u is from East
             } else if (item.dataset.label === t('meridionalWindAxis')) {
-              label += ` (from ${item.parsed.x >= 0 ? t('south') : t('north')})`; // Positive v is from South, Negative v is from North
+              label += ` (${t('prepositionText')} ${item.parsed.x >= 0 ? t('south') : t('north')})`; // Positive v is from South, Negative v is from North
             }
             // Add Wind Direction (DD) and cardinal/intercardinal for 'Horizontal' (Wind Speed) dataset
             if (item.dataset.label === t('windSpeedAxis') && m.DD != null) {
@@ -1023,15 +1025,15 @@ export default function App() {
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
               {/* SENAMHI Logo */}
               <a href="https://www.senamhi.gob.bo/" target="_blank" rel="noopener noreferrer">
-                <img src="/senamhi.png" alt="SENAMHI Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=SENAMHI' }} />
+                <img src="/senamhi.png" alt="SENAMHI Logo" className="h-12 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=SENAMHI' }} />
               </a>
               {/* UPB Logo */}
               <a href="https://www.upb.edu/" target="_blank" rel="noopener noreferrer">
-                <img src="/upb.png" alt="UPB Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=UPB' }} />
+                <img src="/upb.png" alt="UPB Logo" className="h-12 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=UPB' }} />
               </a>
               {/* LRC Logo */}
-              <a href="http://lrc.upb.edu/" target="_blank" rel="noopener noreferrer">
-                <img src="/lrc.png" alt="LRC Logo" className="h-10 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=LRC' }} />
+              <a href="https://lrc.upb.edu/" target="_blank" rel="noopener noreferrer">
+                <img src="/lrc.png" alt="LRC Logo" className="h-12 rounded-md" onError={(e) => { e.currentTarget.src='https://placehold.co/80x40/e0e0e0/1E215B?text=LRC' }} />
               </a>
             </div>
           </div>
