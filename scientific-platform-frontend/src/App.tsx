@@ -170,7 +170,7 @@ const kelvinToCelsius = (k: number | null) => (k ? k - 273.15 : null);
 const metersToKilometers = (m: number | null) => (m ? m / 1000 : null);
 const formatLaunchDate = (dateString: string, lang: Language): string => { 
   const date = new Date(dateString); 
-  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, }; 
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, }; 
   return new Intl.DateTimeFormat(lang, options).format(date).replace(/,/g, ''); 
 }
 
